@@ -63,6 +63,7 @@ define(
                 this.locales       = options.locales;
                 this.parent        = options.parent;
                 this.model.urlRoot = this.parent.updateUrl;
+                this.sortable      = options.sortable;
 
                 this.render();
             },
@@ -80,7 +81,8 @@ define(
 
                 this.$el.html(template({
                     item: this.model.toJSON(),
-                    locales: this.locales
+                    locales: this.locales,
+                    sortable: this.sortable
                 }));
 
                 this.$el.attr('data-item-id', this.model.id);
@@ -357,7 +359,8 @@ define(
                     model:    item,
                     url:      this.updateUrl,
                     locales:  this.locales,
-                    parent:   this
+                    parent:   this,
+                    sortable: this.sortable
                 });
 
                 //If the item is new the view is changed to edit mode
@@ -494,10 +497,6 @@ define(
                 locales: $element.data('locales'),
                 sortable: $element.data('sortable')
             });
-
-            mediator.on('attribute:auto_option_sorting:changed', function (autoSorting) {
-                itemCollectionView.updateSortableStatus(!autoSorting);
-            }.bind(this));
         };
     }
 );
