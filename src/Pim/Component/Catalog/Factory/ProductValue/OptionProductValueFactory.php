@@ -4,6 +4,7 @@ namespace Pim\Component\Catalog\Factory\ProductValue;
 
 use Akeneo\Component\StorageUtils\Exception\InvalidPropertyException;
 use Akeneo\Component\StorageUtils\Exception\InvalidPropertyTypeException;
+use Akeneo\Component\StorageUtils\Repository\CachedObjectRepositoryInterface;
 use Pim\Component\Catalog\Exception\InvalidOptionException;
 use Pim\Component\Catalog\Model\AttributeInterface;
 use Pim\Component\Catalog\Model\AttributeOptionInterface;
@@ -20,7 +21,7 @@ use Pim\Component\Catalog\Repository\AttributeOptionRepositoryInterface;
  */
 class OptionProductValueFactory implements ProductValueFactoryInterface
 {
-    /** @var AttributeOptionRepositoryInterface */
+    /** @var CachedObjectRepositoryInterface */
     protected $attrOptionRepository;
 
     /** @var string */
@@ -30,12 +31,12 @@ class OptionProductValueFactory implements ProductValueFactoryInterface
     protected $supportedAttributeType;
 
     /**
-     * @param AttributeOptionRepositoryInterface $attrOptionRepository
-     * @param string                             $productValueClass
-     * @param string                             $supportedAttributeType
+     * @param CachedObjectRepositoryInterface $attrOptionRepository
+     * @param string                          $productValueClass
+     * @param string                          $supportedAttributeType
      */
     public function __construct(
-        AttributeOptionRepositoryInterface $attrOptionRepository,
+        CachedObjectRepositoryInterface $attrOptionRepository,
         $productValueClass,
         $supportedAttributeType
     ) {
