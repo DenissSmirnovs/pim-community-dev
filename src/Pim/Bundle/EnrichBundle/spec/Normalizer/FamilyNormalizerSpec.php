@@ -5,7 +5,6 @@ namespace spec\Pim\Bundle\EnrichBundle\Normalizer;
 use PhpSpec\ObjectBehavior;
 use Pim\Bundle\CatalogBundle\Filter\CollectionFilterInterface;
 use Pim\Bundle\VersioningBundle\Manager\VersionManager;
-use Pim\Component\Catalog\Model\AttributeGroupInterface;
 use Pim\Component\Catalog\Model\AttributeInterface;
 use Pim\Component\Catalog\Model\FamilyInterface;
 use Pim\Component\Catalog\Repository\AttributeRepositoryInterface;
@@ -16,7 +15,7 @@ class FamilyNormalizerSpec extends ObjectBehavior
 {
     function let(
         NormalizerInterface $familyNormalizer,
-        NormalizerInterface $translationNormalizer,
+        NormalizerInterface $attributeNormalizer,
         CollectionFilterInterface $collectionFilter,
         AttributeRepositoryInterface $attributeRepository,
         VersionManager $versionManager,
@@ -24,7 +23,7 @@ class FamilyNormalizerSpec extends ObjectBehavior
     ) {
         $this->beConstructedWith(
             $familyNormalizer,
-            $translationNormalizer,
+            $attributeNormalizer,
             $collectionFilter,
             $attributeRepository,
             $versionManager,
@@ -50,12 +49,11 @@ class FamilyNormalizerSpec extends ObjectBehavior
     }
 
     function it_normalizes_family(
-        AttributeRepositoryInterface $attributeRepository,
-        AttributeGroupInterface $marketingAttributeGroup,
+        $familyNormalizer,
+        $attributeNormalizer,
         $collectionFilter,
+        AttributeRepositoryInterface $attributeRepository,
         FamilyInterface $family,
-        NormalizerInterface $translationNormalizer,
-        NormalizerInterface $familyNormalizer,
         VersionManager $versionManager,
         AttributeInterface $name,
         AttributeInterface $description,
@@ -64,100 +62,97 @@ class FamilyNormalizerSpec extends ObjectBehavior
         $family->getId()->willReturn(1);
 
         $normalizedFamily = [
-            'code'                   => 'tshirts',
-            'attributes'             => [
+            'code'       => 'tshirts',
+            'attributes' => [
                 'name',
                 'description',
                 'price',
             ],
             'attribute_as_label'     => 'name',
             'attribute_requirements' => [
-                'ecommerce' => [
-                    'name',
-                    'price',
-                ],
-                'mobile' => [
-                    'name',
-                    'price',
-                ]
+                'ecommerce' => ['name', 'price'],
+                'mobile'    => ['name', 'price'],
             ],
             'labels' => [],
-            'meta' => [
-                'id' => 1,
-                'form' => 'pim-family-edit-form',
+            'meta'   => [
+                'id'      => 1,
+                'form'    => 'pim-family-edit-form',
                 'created' => null,
                 'updated' => null,
             ]
         ];
 
-        $familyNormalizer->normalize($family, 'standard', [])->willReturn($normalizedFamily);
+        $familyNormalizer->normalize($family, 'standard', [])
+            ->shouldBeCalled()
+            ->willReturn($normalizedFamily);
 
-        $normalizedFamily['attributes'] = ['name', 'description', 'price'];
-
-        $familyNormalizer->normalize($family, 'standard', [])->shouldBeCalled();
-
-        $attributeRepository->findBy(['code' =>['name', 'description', 'price']])->willReturn([$name, $description, $price]);
-
+        $attributeRepository->findBy(['code' => ['name', 'description', 'price']])
+            ->willReturn([$name, $description, $price]);
         $collectionFilter->filterCollection([$name, $description, $price], 'pim.internal_api.attribute.view')
             ->willReturn([$name, $price]);
 
-        $attributeRepository->findBy(['code' =>['name', 'price']])->willReturn([$name, $price]);
+        $attributeRepository->findBy(['code' => ['name', 'price']])
+            ->willReturn([$name, $price]);
         $collectionFilter->filterCollection([$name, $price], 'pim.internal_api.attribute.view')
             ->willReturn([$name, $price]);
 
-        $translationNormalizer->normalize(Argument::cetera())->willReturn([]);
+        $name->getCode()->willReturn('name');
+        $price->getCode()->willReturn('price');
+
+        $attributeNormalizer->normalize($name, 'internal_api', [])->willReturn(
+            [
+                'code'       => 'name',
+                'type'       => 'pim_catalog_text',
+                'group'      => 'marketing',
+                'labels'     => [],
+                'sort_order' => 1,
+            ]
+        );
+
+        $attributeNormalizer->normalize($price, 'internal_api', [])->willReturn(
+            [
+                'code'       => 'price',
+                'type'       => 'pim_catalog_price_collection',
+                'group'      => 'marketing',
+                'labels'     => [],
+                'sort_order' => 3,
+            ]
+        );
+
         $family->getCode()->willReturn('tshirts');
         $family->getAttributeAsLabel()->willReturn($name);
-
-        $marketingAttributeGroup->getCode()->willReturn('marketing');
-
-        $name->getCode()->willReturn('name');
-        $name->getAttributeType()->willReturn('pim_catalog_text');
-        $name->getGroup()->willReturn($marketingAttributeGroup);
-        $name->getSortOrder()->willReturn(1);
-
-        $price->getCode()->willReturn('price');
-        $price->getAttributeType()->willReturn('pim_catalog_price_collection');
-        $price->getGroup()->willReturn($marketingAttributeGroup);
-        $price->getSortOrder()->willReturn(3);
 
         $versionManager->getOldestLogEntry($family)->shouldBeCalled();
         $versionManager->getNewestLogEntry($family)->shouldBeCalled();
 
         $this->normalize($family)->shouldReturn(
             [
-                'code'                   => 'tshirts',
-                'attributes'             => [
+                'code'       => 'tshirts',
+                'attributes' => [
                     [
-                        'code' => 'name',
-                        'type' => 'pim_catalog_text',
-                        'group_code' => 'marketing',
-                        'labels' => [],
+                        'code'       => 'name',
+                        'type'       => 'pim_catalog_text',
+                        'group'      => 'marketing',
+                        'labels'     => [],
                         'sort_order' => 1,
                     ],
                     [
-                        'code' => 'price',
-                        'type' => 'pim_catalog_price_collection',
-                        'group_code' => 'marketing',
-                        'labels' => [],
+                        'code'       => 'price',
+                        'type'       => 'pim_catalog_price_collection',
+                        'group'      => 'marketing',
+                        'labels'     => [],
                         'sort_order' => 3,
                     ]
                 ],
                 'attribute_as_label'     => 'name',
                 'attribute_requirements' => [
-                    'ecommerce' => [
-                        'name',
-                        'price',
-                    ],
-                    'mobile' => [
-                        'name',
-                        'price',
-                    ]
+                    'ecommerce' => ['name', 'price'],
+                    'mobile'    => ['name', 'price'],
                 ],
                 'labels' => [],
                 'meta' => [
-                    'id' => 1,
-                    'form' => 'pim-family-edit-form',
+                    'id'      => 1,
+                    'form'    => 'pim-family-edit-form',
                     'created' => null,
                     'updated' => null,
                 ]

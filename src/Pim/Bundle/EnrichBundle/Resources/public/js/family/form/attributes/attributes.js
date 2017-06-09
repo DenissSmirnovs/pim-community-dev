@@ -101,9 +101,7 @@ define([
                     this.attributeGroups = attributeGroups;
 
                     var data = this.getFormData();
-                    var groupedAttributes = _.groupBy(data.attributes, function (attribute) {
-                        return attribute.group;
-                    });
+                    var groupedAttributes = _.groupBy(data.attributes, 'group');
 
                     _.sortBy(groupedAttributes, function (attributes, group) {
                         return this.attributeGroups[group].sort_order;
